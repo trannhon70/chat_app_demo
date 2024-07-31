@@ -16,13 +16,17 @@ if ($mysqli->connect_error) {
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $mysqli->real_escape_string($_POST['username']);
     $password = $mysqli->real_escape_string($_POST['password']);
-    var_dump($username);
-    var_dump($password);
 
     $query = "SELECT id, username, name FROM users WHERE username='$username' AND password='$password'";
     $result = $mysqli->query($query);
 
     if ($result->num_rows == 1) {
+        $updateQuery = "UPDATE users SET online = 1 WHERE username = '$username'";
+        if ($mysqli->query($updateQuery)) {
+            echo "Cập nhật thành công!";
+        } else {
+            echo "Lỗi khi cập nhật: " . $mysqli->error;
+        }
         $user = $result->fetch_assoc();
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];

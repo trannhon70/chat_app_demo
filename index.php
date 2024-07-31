@@ -1,5 +1,6 @@
 <?php
 session_start();
+
 $host = 'localhost'; // Thay đổi nếu cần thiết
 $dbname = 'chat_socket'; // Tên cơ sở dữ liệu
 $user = 'root'; // Tên người dùng MySQL
@@ -12,6 +13,20 @@ $mysqli->set_charset("utf8mb4");
 if ($mysqli->connect_error) {
     die('Kết nối không thành công: ' . $mysqli->connect_error);
 }
+
+if( $_SERVER['REQUEST_METHOD'] === 'POST' &&  isset($_POST['submit'])){
+    $userID = $_POST['user_id'];
+    $updateQuery = "UPDATE users SET online = 0 WHERE id = '$userID'";
+    if ($mysqli->query($updateQuery)) {
+        echo "Cập nhật thành công!";
+    } else {
+        echo "Lỗi khi cập nhật: " . $mysqli->error;
+    }
+    session_destroy();
+    header("Location: login.php");
+    exit();
+}
+
 $user_id = $_SESSION['user_id'];
 $query = "SELECT id, username, name, online FROM users WHERE id != '$user_id'";
 $queryMessage = "SELECT id, username, user_id, message, time FROM messages ";
@@ -35,6 +50,7 @@ if ($resultMessage) {
 
 
 $mysqli->close();
+
 ?>
 
 <!DOCTYPE html>
@@ -43,6 +59,7 @@ $mysqli->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <meta http-equiv="refresh" content="10"> -->
     <title>Chat Form with Socket.IO</title>
     <link rel="stylesheet" href="css/index.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
@@ -77,6 +94,10 @@ $mysqli->close();
             <div class="col-9" style="padding-left: 0px;">
                 <header class="bg-info header">
                     hello <?php echo $_SESSION['name']; ?>
+                    <form style="padding-left: 20px;" method="post" >
+                        <input style="display: none;"  name="user_id" value="<?php echo  $_SESSION['user_id'] ?>" />
+                        <button type="submit" name="submit" >Đăng xuất</button>
+                    </form>
                 </header>
                 <div class="chat-body" id="messages-group">
                     <?php foreach ($message_list as $user) : ?>
