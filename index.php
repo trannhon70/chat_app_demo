@@ -95,6 +95,13 @@ $mysqli->close();
         </div>
     </main>
 
+    <input style="display: none;" id="user_id" value="<?php echo  $_SESSION['user_id'] ?>"  />
+                                   
+   
+    <input style="display: none;" id="name" value=" <?php echo  $_SESSION['name'] ?>   "  />
+                            
+
+
     <script>
         const socket = io('http://127.0.0.1:1337');
 
@@ -112,13 +119,16 @@ $mysqli->close();
         });
 
         const form = document.getElementById('chatForm');
+        const userId = document.getElementById('user_id').value;
+        const name = document.getElementById('name').value;
+        console.log(userId);
         form.addEventListener('submit', function(event) {
             event.preventDefault();
             const messageInput = document.getElementById('messageInput').value;
 
             const messageObj = {
-                sender_id: 1, // Thay đổi thành ID của người gửi
-                receiver_id: 2, // Thay đổi thành ID của người nhận
+                user_id: userId, 
+                name: name, 
                 message: messageInput
             };
 
