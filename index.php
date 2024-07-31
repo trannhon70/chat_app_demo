@@ -14,13 +14,22 @@ if ($mysqli->connect_error) {
 }
 $user_id = $_SESSION['user_id'];
 $query = "SELECT id, username, name, online FROM users WHERE id != '$user_id'";
+$queryMessage = "SELECT id, username, user_id, message, time FROM messages ";
 
 $result = $mysqli->query($query);
+$resultMessage = $mysqli->query($queryMessage);
 
 $users = [];
+$message_list = [];
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $users[] = $row;
+    }
+}
+
+if ($resultMessage) {
+    while ($rowMes = $resultMessage->fetch_assoc()) {
+        $message_list[] = $rowMes;
     }
 }
 
@@ -69,22 +78,29 @@ $mysqli->close();
                 <header class="bg-info header">
                     hello <?php echo $_SESSION['name']; ?>
                 </header>
-                <div class="chat-body">
-
-                    <div class="chat-client">
-                        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Fuga, quibusdam. Voluptatibus ad totam quasi earum recusandae consequuntur, corporis, maiores doloremque pariatur quisquam officia eius, quam fugit? Fugiat accusamus facere dolorem.
-                        <div class="chat-client-not">
-                            người nhắn: <span>Nguyễn Văn A</span>
-                        </div>
-                    </div>
-                    <div class="chat-container">
-                        <div class="chat-user">
-                            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Fuga, quibusdam. Voluptatibus ad totam quasi earum recusandae consequuntur, corporis, maiores doloremque pariatur quisquam officia eius, quam fugit? Fugiat accusamus facere dolorem.
-                            <div class="chat-user-not">
-                                người nhắn: <span>Nguyễn Văn A</span>
+                <div class="chat-body" id="messages-group">
+                    <?php foreach ($message_list as $user) : ?>
+                        <?php if ($user['user_id'] !== $_SESSION['user_id']) { ?>
+                            <div style="display: flex; align-items: center; justify-content: flex-start; ">
+                                <div class="chat-client">
+                                   <div class="chat-client-message" > <?php echo $user['message'] ?></div>
+                                    <div class="chat-client-not">
+                                        người nhắn: <span><?php echo $user['username'] ?></span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                        <?php } else { ?>
+                            <div class="chat-container">
+                                <div class="chat-user">
+                                <div class="chat-client-message" > <?php echo $user['message'] ?></div>
+                                    <div class="chat-user-not">
+                                        người nhắn: <span><?php echo $user['username'] ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php } ?>
+                    <?php endforeach; ?>
+
 
                 </div>
                 <form id="chatForm" class="form-chat">
@@ -95,40 +111,75 @@ $mysqli->close();
         </div>
     </main>
 
-    <input style="display: none;" id="user_id" value="<?php echo  $_SESSION['user_id'] ?>"  />
-                                   
-   
-    <input style="display: none;" id="name" value=" <?php echo  $_SESSION['name'] ?>   "  />
-                            
+    <input style="display: none;" id="user_id" value="<?php echo  $_SESSION['user_id'] ?>" />
+
+
+    <input style="display: none;" id="name" value=" <?php echo  $_SESSION['name'] ?>   " />
+
 
 
     <script>
+        const userId = document.getElementById('user_id').value;
+        const name = document.getElementById('name').value;
         const socket = io('http://127.0.0.1:1337');
 
         socket.on('connect', function() {
             console.log('Đã kết nối tới máy chủ Socket.IO');
         });
 
-        socket.on('message', function(message) {
-            const messagesDiv = document.getElementById('messages');
-            // messagesDiv.innerHTML += `<p><strong>${message.sender_id}:</strong> ${message.message}</p>`;
+        socket.on('message', function(messages) {
+            const messagesDiv = document.getElementById('messages-group');
+            let newMessage;
+            if (messages.user_id === userId) {
+                newMessage = `<div class="chat-container new-message">
+                        <div class="chat-user">
+                        <div class="chat-client-message" >
+                                ${messages.message}
+                                </div>
+                            <div class="chat-user-not">
+                                người nhắn: <span>${messages.username}</span>
+                            </div>
+                        </div>
+                      </div>`;
+            } else {
+                newMessage = `<div style="display: flex; align-items: center; justify-content: flex-start;" class="new-message">
+                        <div class="chat-client">
+                        <div class="chat-client-message" >
+                        ${messages.message}
+                        </div>
+                            <div class="chat-client-not">
+                                người nhắn: <span>${messages.username}</span>
+                            </div>
+                        </div>
+                      </div>`;
+            }
+
+            messagesDiv.innerHTML += newMessage;
+
+            const lastMessage = document.querySelector('.new-message:last-child');
+            if (lastMessage) {
+                lastMessage.scrollIntoView({
+                    behavior: 'smooth'
+                });
+                lastMessage.classList.remove('new-message'); // Xóa class để tránh cuộn lại khi có tin nhắn mới
+            }
         });
+
 
         socket.on('disconnect', function() {
             console.log('Đã đóng kết nối tới máy chủ Socket.IO');
         });
 
         const form = document.getElementById('chatForm');
-        const userId = document.getElementById('user_id').value;
-        const name = document.getElementById('name').value;
+
         console.log(userId);
         form.addEventListener('submit', function(event) {
             event.preventDefault();
             const messageInput = document.getElementById('messageInput').value;
 
             const messageObj = {
-                user_id: userId, 
-                name: name, 
+                user_id: userId,
+                username: name,
                 message: messageInput
             };
 
@@ -136,6 +187,7 @@ $mysqli->close();
 
             form.reset();
         });
+        
     </script>
 
 

@@ -95,6 +95,7 @@ body{
 
 .chat-client{
     margin-top: 10px;
+    min-width: auto;
     max-width: 70%;
     background-color: darkgreen;
     padding: 10px;
@@ -153,4 +154,10 @@ body{
 .form-chat>button{
     width: 19%;
     height: 40px;
+}
+
+.chat-client-message{
+    width: 100%;
+    overflow-wrap: break-word; /* Hoặc sử dụng word-wrap: break-word; */
+    white-space: normal;
 }

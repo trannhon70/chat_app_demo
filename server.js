@@ -19,8 +19,9 @@ const io = socketIo(server, {
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '', // Thay đổi nếu cần
-    database: 'chat_socket' // Tên cơ sở dữ liệu
+    password: '', // Sử dụng mật khẩu trống
+    database: 'chat_socket', // Tên cơ sở dữ liệu
+    port: 3307 // Cổng MySQL
 });
 
 // Kết nối tới cơ sở dữ liệu MySQL
@@ -41,25 +42,27 @@ app.get('/', (req, res) => {
 });
 
 // Lắng nghe kết nối Socket.IO
+
 io.on('connection', (socket) => {
     console.log('Một client đã kết nối');
 
-    socket.on('message', (message) => {
-        console.log('Tin nhắn nhận được:', message);
+    socket.on('message', (messages) => {
+        console.log('Tin nhắn nhận được:', messages);
 
         // Lưu tin nhắn vào cơ sở dữ liệu
-        // const { sender_id, receiver_id, message: msgContent } = message;
-        // const query = 'INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)';
-        // db.query(query, [sender_id, receiver_id, msgContent], (err, results) => {
-        //     if (err) {
-        //         console.error('Lỗi khi lưu tin nhắn:', err);
-        //     } else {
-        //         console.log('Tin nhắn đã được lưu vào cơ sở dữ liệu');
-        //     }
-        // });
+        const { user_id,username, message } = messages;
+        const query = 'INSERT INTO messages (user_id, username, message) VALUES (?, ?, ?)';
+        db.query(query, [user_id, username, message], (err, results) => {
+            console.log(results,'re');
+            if (err) {
+                console.error('Lỗi khi lưu tin nhắn:', err);
+            } else {
+                console.log('Tin nhắn đã được lưu vào cơ sở dữ liệu');
+            }
+        });
 
         // // Phát lại tin nhắn cho tất cả clients
-        // io.emit('message', message);
+        io.emit('message', messages);
     });
 
     socket.on('disconnect', () => {
