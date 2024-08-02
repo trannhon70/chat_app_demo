@@ -21,7 +21,7 @@ const db = mysql.createConnection({
     user: 'root',
     password: '', // Sử dụng mật khẩu trống
     database: 'chat_socket', // Tên cơ sở dữ liệu
-    port: 3307 // Cổng MySQL
+    // port: 3307 // Cổng MySQL
 });
 
 // Kết nối tới cơ sở dữ liệu MySQL
@@ -38,7 +38,8 @@ app.use(cors());
 
 // Cung cấp file HTML cho client
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+    // res.sendFile(__dirname + '/index.html');
+    res.send('Chào bác đến với socket')
 });
 
 // Lắng nghe kết nối Socket.IO
